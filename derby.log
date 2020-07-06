@@ -1,0 +1,13 @@
+----------------------------------------------------------------
+Mon Jul 06 15:51:56 CEST 2020:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.2.0 - (1828579): instance a816c00e-0173-2465-c63f-00000708f628 
+on database directory D:\java projects\Meteorite Seeker 1.0\DataBase with class loader sun.misc.Launcher$AppClassLoader@18b4aac2 
+Loaded from file:/D:/java%20projects/Meteorite%20Seeker%201.0/lib/derby.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_251-b08
+user.dir=D:\java projects\Meteorite Seeker 1.0
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
