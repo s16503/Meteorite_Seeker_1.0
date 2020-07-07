@@ -25,12 +25,6 @@ public class Rock {
     private MyImageView photo5;
 
 
-    public Rock(String name, boolean ferromagnetic)
-    {
-        this.name = name;
-        this.ferromagnetic = ferromagnetic;
-    }
-
 
     public Rock(String name, double d_min, double d_max, boolean ferromagnetic,
                 String description, String type1, String type2, List<MyImageView> images)

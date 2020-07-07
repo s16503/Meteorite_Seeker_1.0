@@ -235,6 +235,65 @@ public class RocksDB {
 
     }
 
+    public void updateData(Rock rock) throws SQLException, IOException {
+        System.out.println("Aktualizowanie skały o id: " + rock.getId());
+
+        int ferromagnetic = rock.isFerromagnetic() ? 1:0;
+//
+//        connection.createStatement().execute(
+//                "UPDATE Rock SET Name ='"+rock.getName()+"', Density_Min ="+rock.getDensity_Min()+","
+//                        +"Density_Max ="+rock.getDensity_Max()+",Ferromagnetic ="+ ferromagnetic
+//                        +", Description ="+ rock.getDescription() + ", Type1 = "+rock.getType1() + "Type2 = " +rock.getType2() + " WHERE Id_Rock ="+rock.getId()
+//        );
+
+        PreparedStatement update = connection.prepareStatement
+                ("UPDATE Rock SET name = ?, Density_Min = ?, Density_Max = ?, Ferromagnetic = ?, Description = ?," +
+                        "Type1 = ?, Type2 = ? WHERE Id_Rock = ?");
+
+
+        update.setString(1,rock.getName());
+        update.setDouble(2,rock.getDensity_Min());
+        update.setDouble(3,rock.getDensity_Max());
+        update.setInt(4,ferromagnetic);
+        update.setString(5,rock.getDescription());
+        update.setString(6,rock.getType1());
+        update.setString(7,rock.getType2());
+        update.setInt(8,rock.getId());
+
+        update.executeUpdate();
+
+
+        //photos
+        ResultSet resultSet;
+        resultSet = connection
+                .createStatement()
+                .executeQuery(
+                        "SELECT max(Id_Photo) as maxId FROM Photo"
+                );
+
+        int nextPhotoId;
+        if (resultSet.next())
+        {
+            nextPhotoId = resultSet.getInt("maxId")+1;
+        }
+        else
+            nextPhotoId = 1;
+
+        for (MyImageView imageView : rock.imagesList)
+        {
+            String DML = "INSERT INTO Photo VALUES (?, ?, ?)";
+            InputStream instream = Files.newInputStream(imageView.getImagePath());
+            PreparedStatement pstmnt = connection.prepareStatement(DML);
+            pstmnt.setInt(1, nextPhotoId);
+            pstmnt.setInt(2, rock.getId());
+            pstmnt.setBinaryStream(3, instream);
+            pstmnt.executeUpdate();
+            nextPhotoId++;
+        }
+
+        System.out.println("Aktualizowano pomyślnie.");
+    }
+
     public void deleteData(int id) throws SQLException {
         System.out.println("Usuwanie skały id: " + id);
 
@@ -249,6 +308,18 @@ public class RocksDB {
         System.out.println("Usunięto pomyślnie");
 
     }
+
+
+    public void deletePhoto(int id) throws SQLException {
+        System.out.println("Usuwanie zdjecia id: " + id);
+
+        connection.createStatement().execute(
+                "DELETE FROM Photo WHERE Id_Photo ="+id
+        );
+
+        System.out.println("Usunięto pomyślnie");
+    }
+
 
 
 

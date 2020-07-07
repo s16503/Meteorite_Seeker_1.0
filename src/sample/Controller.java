@@ -74,7 +74,24 @@ public class Controller {
     @FXML
     private void handleEditButton(ActionEvent event)
     {
-        System.out.println(">>> TEST OK");
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("sample\\AddDataWindow.fxml"));
+            Parent root = loader.load();
+            AddDataController addDataController = loader.getController();
+
+            Rock rock = (Rock) tableView.getSelectionModel().getSelectedItem();
+            addDataController.initEditData(rock);
+            Stage stage = new Stage();
+            stage.setTitle("Edycja skały");
+            stage.setScene(new Scene(root, 800, 500));
+            stage.show();
+            // Hide this current window (if this is what you want)
+            //((Node)(event.getSource())).getScene().getWindow().hide();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 

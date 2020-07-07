@@ -21,11 +21,13 @@ public class MyImageView extends ImageView {
     public static final Image DEFAULT_IMAGE = getFormatImage("images\\image-empty-icon.png");
     private Path imagePath;
     private Image originalSizeImage;
+    private boolean old;
 
     public MyImageView() {
         super();
         this.setImage(DEFAULT_IMAGE);
         this.selected = false;
+        this.old = false;
     }
 
     public MyImageView(String url) {
@@ -94,5 +96,13 @@ public class MyImageView extends ImageView {
 
     public Path getImagePath() {
         return imagePath;
+    }
+
+    public void setOld(boolean old) {
+        this.old = old;
+    }
+
+    public boolean isOld() {
+        return old;
     }
 }

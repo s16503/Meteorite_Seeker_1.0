@@ -28,38 +28,26 @@ import java.util.List;
 
 public class AddDataController {
 
-
     @FXML
     Button addPhotosButton;
-
     @FXML
     Button addButton;
-
     @FXML
     Button cancelButton;
-
     @FXML
     TextField nameTextField;
-
     @FXML
     TextField density1TextField;
-
     @FXML
     TextField density2TextField;
-
     @FXML
     TextField type1TextField;
-
     @FXML
     TextField type2TextField;
-
     @FXML
     TextArea descTextArea;
-
     @FXML
     CheckBox ferromagneticCheckbox;
-
-
 
     @FXML
     MyImageView imageViewSlot1;
@@ -72,11 +60,6 @@ public class AddDataController {
     @FXML
     MyImageView imageViewSlot5;
 
-    //todo
-//    @FXML
-//    ArrayList<ImageView> imageViewsList;
-
-
     @FXML
     Label imageLabel1;
     @FXML
@@ -88,9 +71,21 @@ public class AddDataController {
     @FXML
     Label imageLabel5;
 
-    RocksDB dataBase = new RocksDB();
+    MyImageView slots[];
+    Label labels[];
 
+    RocksDB dataBase = new RocksDB();
     List<String> paths;
+    boolean update;
+    int idToUpdate;
+    List<MyImageView> toDelete;
+
+    public AddDataController()
+    {
+        update = false;
+        idToUpdate = 0;
+        toDelete = new ArrayList<>();
+    }
 
     //zatwierdzenie dodawanych danych
     @FXML
@@ -109,31 +104,41 @@ public class AddDataController {
 
         try
         {
-            if (imageViewSlot1.isSelected())
+
+            for (MyImageView slot : slots)
             {
-                imageViewSlot1.setImage(createImage(imageViewSlot1.getImagePath()));
-                images.add(imageViewSlot1);
+                if (slot.isSelected() && !slot.isOld())
+                {
+                    slot.setImage(createImage(slot.getImagePath()));
+                    images.add(slot);
+                }
             }
-            if (imageViewSlot2.isSelected())
-            {
-                imageViewSlot2.setImage(createImage(imageViewSlot2.getImagePath()));
-                images.add(imageViewSlot2);
-            }
-            if (imageViewSlot3.isSelected())
-            {
-                imageViewSlot3.setImage(createImage(imageViewSlot3.getImagePath()));
-                images.add(imageViewSlot3);
-            }
-            if (imageViewSlot4.isSelected())
-            {
-                imageViewSlot4.setImage(createImage(imageViewSlot4.getImagePath()));
-                images.add(imageViewSlot4);
-            }
-            if (imageViewSlot5.isSelected())
-            {
-                imageViewSlot5.setImage(createImage(imageViewSlot5.getImagePath()));
-                images.add(imageViewSlot5);
-            }
+
+//            if (imageViewSlot1.isSelected())
+//            {
+//                imageViewSlot1.setImage(createImage(imageViewSlot1.getImagePath()));
+//                images.add(imageViewSlot1);
+//            }
+//            if (imageViewSlot2.isSelected())
+//            {
+//                imageViewSlot2.setImage(createImage(imageViewSlot2.getImagePath()));
+//                images.add(imageViewSlot2);
+//            }
+//            if (imageViewSlot3.isSelected())
+//            {
+//                imageViewSlot3.setImage(createImage(imageViewSlot3.getImagePath()));
+//                images.add(imageViewSlot3);
+//            }
+//            if (imageViewSlot4.isSelected())
+//            {
+//                imageViewSlot4.setImage(createImage(imageViewSlot4.getImagePath()));
+//                images.add(imageViewSlot4);
+//            }
+//            if (imageViewSlot5.isSelected())
+//            {
+//                imageViewSlot5.setImage(createImage(imageViewSlot5.getImagePath()));
+//                images.add(imageViewSlot5);
+//            }
 
 
         }catch (Exception ex)
@@ -144,7 +149,20 @@ public class AddDataController {
 
 
         try {
-            dataBase.addData(new Rock(name,density1,density2,isFerromagnetic,desc,type1,type2,images));
+            if (update)
+            {
+                Rock rock = new Rock(name,density1,density2,isFerromagnetic,desc,type1,type2,images);
+                rock.setId(idToUpdate);
+                dataBase.updateData(rock);
+
+                for (MyImageView imageView : toDelete)
+                    dataBase.deletePhoto(imageView.getDBId());
+            }
+            else
+                {
+                    dataBase.addData(new Rock(name,density1,density2,isFerromagnetic,desc,type1,type2,images));
+                }
+
         } catch (SQLException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -152,14 +170,17 @@ public class AddDataController {
         }
 
 
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
+
 
     }
 
     @FXML
     private void handleCancelButton(ActionEvent event)
     {
-
-
+        Stage stage = (Stage) cancelButton.getScene().getWindow();
+        stage.close();
     }
 
     // wybór zdjęć, foto umieszczane w wolnych slotach
@@ -175,6 +196,7 @@ public class AddDataController {
 
         for(File file : list)
         {
+
             if (!imageViewSlot1.isSelected())
             {
                 imageLabel1.setText(file.getName());
@@ -217,6 +239,33 @@ public class AddDataController {
 
         }
 
+    }
+
+
+    public void initEditData(Rock rock)
+    {
+        update = true;
+        idToUpdate = rock.getId();
+
+        nameTextField.setText(rock.getName());
+        density1TextField.setText(String.valueOf(rock.getDensity_Min()));
+        density2TextField.setText(String.valueOf(rock.getDensity_Max()));
+        type1TextField.setText(rock.getType1());
+        type2TextField.setText(rock.getType2());
+        descTextArea.setText(rock.getDescription());
+        if (rock.isFerromagnetic())
+            ferromagneticCheckbox.setSelected(true);
+
+        //todo usuwanie zdjęć (zastąpione zdjęcei jest usuwane)
+        MyImageView images[] = {imageViewSlot1,imageViewSlot2,imageViewSlot3,imageViewSlot4,imageViewSlot5};
+        for (int i = 0; i < rock.getImagesList().size(); i++) {
+            images[i].setImage(rock.getImagesList().get(i).getImage());
+            //images[i].setImagePath(rock.getImagesList().get(i).getImagePath());
+            images[i].setOriginalSizeImage(rock.getImagesList().get(i).getOriginalSizeImage());
+            images[i].setSelected(true);
+            images[i].setOld(true);
+            images[i].setDBId(rock.getImagesList().get(i).getDBId());
+        }
 
     }
 
@@ -259,73 +308,59 @@ public class AddDataController {
 
 
 
-
-
-
     @FXML
     private void initialize()
     {
-
+        slots = new MyImageView[]{imageViewSlot1,imageViewSlot2,imageViewSlot3,imageViewSlot4,imageViewSlot5};
+        labels = new Label[]{imageLabel1,imageLabel2,imageLabel3,imageLabel4,imageLabel5};
         paths = new ArrayList<>();
 
-//        imageViewSlot1.setImage(getImage("images\\image-empty-icon.png"));
-//        imageViewSlot2.setImage(getImage("images\\image-empty-icon.png"));
-//        imageViewSlot3.setImage(getImage("images\\image-empty-icon.png"));
-//        imageViewSlot4.setImage(getImage("images\\image-empty-icon.png"));
-//        imageViewSlot5.setImage(getImage("images\\image-empty-icon.png"));
+
+        for (int i = 0; i < slots.length; i++) {
+            int f_i = i;
+            slots[i].setOnMouseClicked(event ->
+            {
+                slots[f_i].setSelected(false);
+                labels[f_i].setText(f_i+") ...");
+                if (slots[f_i].isOld())
+                {
+                    toDelete.add(slots[f_i]);
+                    slots[f_i].setOld(false);
+                }
+
+            });
+        }
 
 
-        // po kliknięciu na zdjęcie jest ono usuwane
-
-        //todo
-//        for (ImageView imageView : imageViewsList)
+//        imageViewSlot1.setOnMouseClicked(event ->
 //        {
-//            imageView.setOnMouseClicked(event ->
-//            {
-//                imageView.setImage(null);
-//            });
-//        }
-
-        imageViewSlot1.setOnMouseClicked(event ->
-        {
-
-            imageViewSlot1.setSelected(false);
-            imageLabel1.setText("1) ...");
-
-//            FileChooser fileChooser = new FileChooser();
-//            fileChooser.setTitle("Wybór zdjęcia");
-//            try
-//            {
-//                imageViewSlot1.setImage(getImageView(fileChooser.showOpenDialog(new Stage()).getPath()));
-//            }catch (NullPointerException ex)
-//            {
-//                imageViewSlot1.setImage(null);
-//            }
-
-        });
-
-        imageViewSlot2.setOnMouseClicked(event ->
-        {
-            imageViewSlot2.setSelected(false);
-            imageLabel2.setText("2) ...");
-        });
-
-        imageViewSlot3.setOnMouseClicked(event ->
-        {
-            imageViewSlot3.setSelected(false);
-            imageLabel3.setText("3) ...");
-        });
-
-        imageViewSlot4.setOnMouseClicked(event ->
-        {
-            imageViewSlot4.setSelected(false);
-            imageLabel4.setText("4) ...");
-        });
-
-        imageViewSlot5.setOnMouseClicked(event ->
-        {
-            imageViewSlot5.setSelected(false);
-            imageLabel5.setText("5) ...");
-        });
+//
+//            imageViewSlot1.setSelected(false);
+//            imageLabel1.setText("1) ...");
+//        });
+//
+//        imageViewSlot2.setOnMouseClicked(event ->
+//        {
+//            imageViewSlot2.setSelected(false);
+//            imageLabel2.setText("2) ...");
+//        });
+//
+//        imageViewSlot3.setOnMouseClicked(event ->
+//        {
+//            imageViewSlot3.setSelected(false);
+//            imageLabel3.setText("3) ...");
+//        });
+//
+//        imageViewSlot4.setOnMouseClicked(event ->
+//        {
+//            imageViewSlot4.setSelected(false);
+//            imageLabel4.setText("4) ...");
+//        });
+//
+//        imageViewSlot5.setOnMouseClicked(event ->
+//        {
+//            imageViewSlot5.setSelected(false);
+//            imageLabel5.setText("5) ...");
+//        });
     }
 }

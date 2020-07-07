@@ -39,8 +39,8 @@
             <Label fx:id="imageLabel3" layoutX="21.0" layoutY="335.0" text="&gt; ..." />
             <Label fx:id="imageLabel4" layoutX="21.0" layoutY="356.0" text="&gt; ..." />
             <Label fx:id="imageLabel5" layoutX="21.0" layoutY="377.0" text="&gt; ..." />
-            <Button fx:id="addButton" layoutX="590.0" layoutY="417.0" mnemonicParsing="false" onAction="#handleAddButton" prefHeight="31.0" prefWidth="98.0" text="ADD" />
-            <Button fx:id="cancelButton" layoutX="706.0" layoutY="417.0" mnemonicParsing="false" text="Cancel" />
+            <Button fx:id="addButton" onAction="#handleAddButton" layoutX="590.0" layoutY="417.0" mnemonicParsing="false" prefHeight="31.0" prefWidth="98.0" text="ADD" />
+            <Button fx:id="cancelButton" onAction="#handleCancelButton" layoutX="706.0" layoutY="417.0" mnemonicParsing="false" text="Cancel" />
          </children>
       </AnchorPane>
    </children>
