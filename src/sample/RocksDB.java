@@ -5,12 +5,14 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +39,8 @@ public class RocksDB {
     {
         try
         {
-            //connection.createStatement().execute("DROP TABLE Photo");
-          //  connection.createStatement().execute("DROP TABLE Rock");
+           // connection.createStatement().execute("DROP TABLE Photo");
+            //connection.createStatement().execute("DROP TABLE Rock");
 
             connection.createStatement().execute(
                             "CREATE TABLE Photo(\n" +
@@ -91,6 +93,8 @@ public class RocksDB {
 
 
 
+
+
     }
 
     public List<Rock> getAll() throws SQLException, IOException {
@@ -107,27 +111,45 @@ public class RocksDB {
         {
             int idRock = resultSet.getInt("Id_Rock");
 
+            System.out.println(">>>>>>>>>>>>ID ROCK = "+ idRock);
             ResultSet photosResultSet;
             photosResultSet = connection
                     .createStatement()
                     .executeQuery(
-                            "SELECT Photo_File FROM Photos WHERE Id_Rock ==" + idRock
+                            "SELECT Photo_File, Id_Photo FROM Photo WHERE Rock_Id_Rock =" + idRock
                     );
-            List<ImageView> images = new ArrayList<>();
+            List<MyImageView> images = new ArrayList<>();
             while(photosResultSet.next())
             {
-                Blob b=photosResultSet.getBlob(3);
+                Blob b=photosResultSet.getBlob(1);
                 byte barr[]=b.getBytes(1,(int)b.length());
 
 
                 ByteArrayInputStream bis = new ByteArrayInputStream(barr);
-                BufferedImage image = ImageIO.read(bis);
-                Image img = SwingFXUtils.toFXImage(image, null);
-                images.add(new ImageView(img));
+                BufferedImage bufferedImage = ImageIO.read(bis);
+                Image img = SwingFXUtils.toFXImage(bufferedImage, null);
+
+                MyImageView myImageView = new MyImageView();
+                myImageView.setOriginalSizeImage(img);
+
+                int w = 200;
+                int h = 150;
+
+                BufferedImage imOut = new BufferedImage(w,h,bufferedImage.getType());
+                Graphics2D g2d = imOut.createGraphics();
+                g2d.drawImage(bufferedImage, 0, 0, w, h, null);
+                g2d.dispose();
+                Image image = SwingFXUtils.toFXImage(imOut, null);
+                myImageView.setImage(image);
+
+                myImageView.setDBId(photosResultSet.getInt("Id_Photo"));
+
+                images.add(myImageView);
             }
 
             boolean ferromagnetyk = resultSet.getInt("Ferromagnetic") == 1 ? true : false;
             Rock rock = new Rock(
+
                     resultSet.getString("name"),
                     resultSet.getDouble("Density_Min"),
                     resultSet.getDouble("Density_Max"),
@@ -138,6 +160,7 @@ public class RocksDB {
                     images
             );
 
+            rock.setId(resultSet.getInt("Id_Rock"));
             list.add(rock);
         }
 
@@ -156,9 +179,9 @@ public class RocksDB {
         );
 
         int nextId;
-        if(resultSet.first())
+        if(resultSet.next())
         {
-            nextId = Integer.parseInt(resultSet.getString("maxId"))+1;
+            nextId = resultSet.getInt("maxId")+1;
         }
         else
             nextId = 1;
@@ -172,8 +195,8 @@ public class RocksDB {
 
         connection.createStatement().execute(
                 "INSERT INTO Rock VALUES(" +
-                        ""+nextId+","+rock.getName()+","+rock.getDensity_Min()+","+rock.getDensity_Max()+","+ferromagnetic+","
-                        +rock.getDescription() + "," + rock.getType1() + "," + rock.getType2()+")"
+                        ""+nextId+",'"+rock.getName()+"',"+rock.getDensity_Min()+","+rock.getDensity_Max()+","+ferromagnetic+",'"
+                        +rock.getDescription() + "','" + rock.getType1() + "','" + rock.getType2()+"')"
         );
 
         System.out.println("dodano.");
@@ -187,17 +210,17 @@ public class RocksDB {
                 );
 
         int nextPhotoId;
-        if (resultSet.first())
+        if (resultSet.next())
         {
-            nextPhotoId = Integer.parseInt(resultSet.getString("maxId"))+1;
+            nextPhotoId = resultSet.getInt("maxId")+1;
         }
         else
             nextPhotoId = 1;
 
-        for (ImageView imageView : rock.imagesList)
+        for (MyImageView imageView : rock.imagesList)
         {
-            String DML = "INSERT INTO Picture VALUES (?, ?, ?)";
-            InputStream instream = Files.newInputStream((Path) imageView.getImage());
+            String DML = "INSERT INTO Photo VALUES (?, ?, ?)";
+            InputStream instream = Files.newInputStream(imageView.getImagePath());
             PreparedStatement pstmnt = connection.prepareStatement(DML);
             pstmnt.setInt(1, nextPhotoId);
             pstmnt.setInt(2, nextId);
@@ -211,6 +234,22 @@ public class RocksDB {
 
 
     }
+
+    public void deleteData(int id) throws SQLException {
+        System.out.println("Usuwanie skały id: " + id);
+
+        connection.createStatement().execute(
+                "DELETE FROM Rock WHERE Id_Rock ="+id
+        );
+
+        connection.createStatement().execute(
+                "DELETE FROM Photo WHERE Rock_Id_Rock ="+id
+        );
+
+        System.out.println("Usunięto pomyślnie");
+
+    }
+
 
 
 

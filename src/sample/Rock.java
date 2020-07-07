@@ -8,6 +8,8 @@ import java.util.List;
 
 public class Rock {
 
+
+    private int id;
     private String name;
     private double density_Min;
     private double density_Max;
@@ -15,12 +17,12 @@ public class Rock {
     private String description;
     private String type1;
     private String type2;
-    List<ImageView> imagesList;
-    private ImageView photo1;
-    private ImageView photo2;
-    private ImageView photo3;
-    private ImageView photo4;
-    private ImageView photo5;
+    List<MyImageView> imagesList;
+    private MyImageView photo1;
+    private MyImageView photo2;
+    private MyImageView photo3;
+    private MyImageView photo4;
+    private MyImageView photo5;
 
 
     public Rock(String name, boolean ferromagnetic)
@@ -31,7 +33,7 @@ public class Rock {
 
 
     public Rock(String name, double d_min, double d_max, boolean ferromagnetic,
-                String description, String type1, String type2, List<ImageView> images)
+                String description, String type1, String type2, List<MyImageView> images)
     {
         this.name = name;
         this.density_Min = d_min;
@@ -98,35 +100,45 @@ public class Rock {
         return ferromagnetic;
     }
 
+    public int getId() {
+        return id;
+    }
 
-    public void setPhoto1(ImageView imageView)
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setPhoto1(MyImageView imageView)
     {
         this.photo1 = imageView;
     }
 
-    public ImageView getPhoto1()
+    public MyImageView getPhoto1()
     {
         return photo1;
     }
-    public ImageView getPhoto2()
+    public MyImageView getPhoto2()
     {
         return photo2;
     }
-
-    public ImageView getPhoto3()
+    public MyImageView getPhoto3()
     {
         return photo3;
     }
-    public ImageView getPhoto4()
+    public MyImageView getPhoto4()
     {
         return photo4;
     }
-    public ImageView getPhoto5()
+    public MyImageView getPhoto5()
     {
         return photo5;
     }
 
-//
+    public List<MyImageView> getImagesList() {
+        return imagesList;
+    }
+
+    //
 //    public void setPhoto2(ImageView imageView)
 //    {
 //        this.photo2 = imageView;

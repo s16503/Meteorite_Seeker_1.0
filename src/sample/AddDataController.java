@@ -19,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -89,8 +90,9 @@ public class AddDataController {
 
     RocksDB dataBase = new RocksDB();
 
+    List<String> paths;
 
-    //zatwierdzzenie dodawanych danych
+    //zatwierdzenie dodawanych danych
     @FXML
     private void handleAddButton(ActionEvent event)
     {
@@ -103,18 +105,42 @@ public class AddDataController {
         String type2 = type2TextField.getText();
 
 
-        List<ImageView> images = new ArrayList<>();
+        List<MyImageView> images = new ArrayList<>();
 
-        if (imageViewSlot1.isSelected())
-            images.add(imageViewSlot1);
-        if (imageViewSlot2.isSelected())
-            images.add(imageViewSlot2);
-        if (imageViewSlot3.isSelected())
-            images.add(imageViewSlot3);
-        if (imageViewSlot4.isSelected())
-            images.add(imageViewSlot4);
-        if (imageViewSlot5.isSelected())
-            images.add(imageViewSlot5);
+        try
+        {
+            if (imageViewSlot1.isSelected())
+            {
+                imageViewSlot1.setImage(createImage(imageViewSlot1.getImagePath()));
+                images.add(imageViewSlot1);
+            }
+            if (imageViewSlot2.isSelected())
+            {
+                imageViewSlot2.setImage(createImage(imageViewSlot2.getImagePath()));
+                images.add(imageViewSlot2);
+            }
+            if (imageViewSlot3.isSelected())
+            {
+                imageViewSlot3.setImage(createImage(imageViewSlot3.getImagePath()));
+                images.add(imageViewSlot3);
+            }
+            if (imageViewSlot4.isSelected())
+            {
+                imageViewSlot4.setImage(createImage(imageViewSlot4.getImagePath()));
+                images.add(imageViewSlot4);
+            }
+            if (imageViewSlot5.isSelected())
+            {
+                imageViewSlot5.setImage(createImage(imageViewSlot5.getImagePath()));
+                images.add(imageViewSlot5);
+            }
+
+
+        }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+
 
 
         try {
@@ -126,11 +152,13 @@ public class AddDataController {
         }
 
 
+
     }
 
     @FXML
     private void handleCancelButton(ActionEvent event)
     {
+
 
     }
 
@@ -150,36 +178,41 @@ public class AddDataController {
             if (!imageViewSlot1.isSelected())
             {
                 imageLabel1.setText(file.getName());
-                imageViewSlot1.setImage(getImage(file.getPath()));
+                imageViewSlot1.setImage(createScaledImage(file.getPath()));
                 imageViewSlot1.setSelected(true);
+                imageViewSlot1.setImagePath(Paths.get(file.getPath()));
             }
             else
             if (!imageViewSlot2.isSelected())
             {
                 imageLabel2.setText(file.getName());
-                imageViewSlot2.setImage(getImage(file.getPath()));
+                imageViewSlot2.setImage(createScaledImage(file.getPath()));
                 imageViewSlot2.setSelected(true);
+                imageViewSlot2.setImagePath(Paths.get(file.getPath()));
             }
             else
             if (!imageViewSlot3.isSelected())
             {
                 imageLabel3.setText(file.getName());
-                imageViewSlot3.setImage(getImage(file.getPath()));
+                imageViewSlot3.setImage(createScaledImage(file.getPath()));
                 imageViewSlot3.setSelected(true);
+                imageViewSlot3.setImagePath(Paths.get(file.getPath()));
             }
             else
             if (!imageViewSlot4.isSelected())
             {
                 imageLabel4.setText(file.getName());
-                imageViewSlot4.setImage(getImage(file.getPath()));
+                imageViewSlot4.setImage(createScaledImage(file.getPath()));
                 imageViewSlot4.setSelected(true);
+                imageViewSlot4.setImagePath(Paths.get(file.getPath()));
             }
             else
             if (!imageViewSlot5.isSelected())
             {
                 imageLabel5.setText(file.getName());
-                imageViewSlot5.setImage(getImage(file.getPath()));
+                imageViewSlot5.setImage(createScaledImage(file.getPath()));
                 imageViewSlot5.setSelected(true);
+                imageViewSlot5.setImagePath(Paths.get(file.getPath()));
             }
 
         }
@@ -187,7 +220,7 @@ public class AddDataController {
 
     }
 
-    Image getImage(String path)
+    Image createScaledImage(String path)
     {
         InputStream instream = null;
         try {
@@ -215,6 +248,16 @@ public class AddDataController {
     }
 
 
+    // file path -> ImageView
+    private Image createImage(Path path) throws IOException {
+        File file = path.toFile();
+        BufferedImage bufferedImage = ImageIO.read(file);
+        Image image = SwingFXUtils.toFXImage(bufferedImage, null);
+
+        return image;
+    }
+
+
 
 
 
@@ -222,6 +265,8 @@ public class AddDataController {
     @FXML
     private void initialize()
     {
+
+        paths = new ArrayList<>();
 
 //        imageViewSlot1.setImage(getImage("images\\image-empty-icon.png"));
 //        imageViewSlot2.setImage(getImage("images\\image-empty-icon.png"));

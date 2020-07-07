@@ -10,13 +10,17 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class MyImageView extends ImageView {
 
 
+    private int id;
     boolean selected;
     public static final Image DEFAULT_IMAGE = getFormatImage("images\\image-empty-icon.png");
+    private Path imagePath;
+    private Image originalSizeImage;
 
     public MyImageView() {
         super();
@@ -24,6 +28,13 @@ public class MyImageView extends ImageView {
         this.selected = false;
     }
 
+    public MyImageView(String url) {
+        super(url);
+    }
+
+    public MyImageView(Image image) {
+        super(image);
+    }
 
     public boolean isSelected() {
         return selected;
@@ -36,7 +47,23 @@ public class MyImageView extends ImageView {
         this.selected = selected;
     }
 
+    public void setOriginalSizeImage(Image image)
+    {
+        this.originalSizeImage = image;
+    }
 
+    public Image getOriginalSizeImage()
+    {
+        return originalSizeImage;
+    }
+
+    public void setDBId(int id) {
+        this.id = id;
+    }
+
+    public int getDBId() {
+        return id;
+    }
 
     static Image getFormatImage(String path) {
         InputStream instream = null;
@@ -61,4 +88,11 @@ public class MyImageView extends ImageView {
         return null;
     }
 
+    public void setImagePath(Path imagePath) {
+        this.imagePath = imagePath;
+    }
+
+    public Path getImagePath() {
+        return imagePath;
+    }
 }

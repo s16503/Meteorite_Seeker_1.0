@@ -7,12 +7,13 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 import javax.imageio.ImageIO;
@@ -30,6 +31,8 @@ import java.util.List;
 
 public class Controller {
 
+    RocksDB dataBase;
+
     @FXML
     TableView tableView = new TableView();
 
@@ -39,6 +42,8 @@ public class Controller {
     Button editButton;
     @FXML
     Button deleteButton;
+    @FXML
+    Button refreshButton;
 
 
 
@@ -63,6 +68,7 @@ public class Controller {
             e.printStackTrace();
         }
 
+        refreshTable();
     }
 
     @FXML
@@ -75,13 +81,74 @@ public class Controller {
     @FXML
     private void handleDeleteButton(ActionEvent event)
     {
-        System.out.println(">>> TEST OK");
+        Rock rock;
+        try
+        {
+           rock = (Rock) tableView.getSelectionModel().getSelectedItem();
+           dataBase.deleteData(rock.getId());
+        }
+        catch (NullPointerException ex)
+        {
+            System.out.println("[!]> Nie wybrano wiersza");
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
 
+        refreshTable();
     }
 
 
+    @FXML
+    private void handleRefreshButton(ActionEvent event)
+    {
+        refreshTable();
+    }
+
+    private void refreshTable()
+    {
+        try {
+           tableView.getItems().clear();
+           tableView.getItems().addAll(dataBase.getAll());
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void showPhotosView(List<MyImageView> myImageViews)
+    {
+
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("sample\\photosWindow.fxml"));
+            Parent root = loader.load();
+            PhotosViewController photosViewController = loader.getController();
+
+            List<ImageView> images = new ArrayList<>();
+            for (MyImageView myImageView : myImageViews)
+                images.add(new ImageView(myImageView.getOriginalSizeImage()));
+
+            photosViewController.loadPhotos(images);
 
 
+            Stage stage = new Stage();
+            stage.setTitle("Podgląd");
+            stage.setScene(new Scene(root, 1000, 800));
+            stage.show();
+
+            // Hide this current window (if this is what you want)
+            //((Node)(event.getSource())).getScene().getWindow().hide();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+
+    }
 
 
 
@@ -89,14 +156,17 @@ public class Controller {
     private void initialize()
     {
 
-        RocksDB dataBase = new RocksDB();
+       dataBase = new RocksDB();
 
        // dataBase.init();
 
-        System.out.println("OK");
+
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         // wyswietlanie w tebeli, definicja kolumn
+
+        TableColumn<Integer, Rock> column0 = new TableColumn<>("Id");
+        column0.setCellValueFactory(new PropertyValueFactory<>("id"));
 
         TableColumn<String, Rock> column1 = new TableColumn<>("Nazwa");
         column1.setCellValueFactory(new PropertyValueFactory<>("name"));
@@ -119,22 +189,24 @@ public class Controller {
         TableColumn<String, Rock> column7 = new TableColumn<>("*Opis");
         column7.setCellValueFactory(new PropertyValueFactory<>("description"));
 
-        TableColumn<Rock, ImageView> column8 = new TableColumn<Rock, ImageView>("Photo_1");
-        column8.setCellValueFactory(new PropertyValueFactory<Rock, ImageView>("photo1"));
+        TableColumn<Rock, MyImageView> column8 = new TableColumn<Rock, MyImageView>("Photo_1");
+        column8.setCellValueFactory(new PropertyValueFactory<Rock, MyImageView>("photo1"));
 
-        TableColumn<Rock, ImageView> column9 = new TableColumn<>("Photo_2");
+        TableColumn<Rock, MyImageView> column9 = new TableColumn<>("Photo_2");
         column9.setCellValueFactory(new PropertyValueFactory<>("photo2"));
 
-        TableColumn<Rock, ImageView> column10 = new TableColumn<>("Photo_3");
+        TableColumn<Rock, MyImageView> column10 = new TableColumn<>("Photo_3");
         column10.setCellValueFactory(new PropertyValueFactory<>("photo3"));
 
-        TableColumn<Rock, ImageView> column11 = new TableColumn<>("Photo_4");
+        TableColumn<Rock, MyImageView> column11 = new TableColumn<>("Photo_4");
         column11.setCellValueFactory(new PropertyValueFactory<>("photo4"));
 
-        TableColumn<Rock, ImageView> column12 = new TableColumn<>("Photo_5");
+        TableColumn<Rock, MyImageView> column12 = new TableColumn<>("Photo_5");
         column12.setCellValueFactory(new PropertyValueFactory<>("photo5"));
 
 
+
+        tableView.getColumns().add(column0);
         tableView.getColumns().add(column1);
         tableView.getColumns().add(column2);
         tableView.getColumns().add(column3);
@@ -149,22 +221,30 @@ public class Controller {
         tableView.getColumns().add(column12);
 
 
-//            ImageView iv1 = getImageView("skaly-bazalt.png");
-//            ImageView iv2 = getImageView("bazalt2.jpg");
-//            List<ImageView> imageViews = new ArrayList<>();
-//            imageViews.add(iv1);
-//            imageViews.add(iv2);
-//
-//            Rock rock1 = new Rock("Bazalt",2.8,3.0,false,"rdzawy",null,null,imageViews);
-//
-//            tableView.getItems().add(rock1);
 
+        // doulbe click -> otwarcie dużych zdjęć tej skały
+        tableView.setRowFactory( tv -> {
+            TableRow<Rock> row = new TableRow<>();
+            row.setOnMouseClicked(event -> {
+                if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
+                    Rock rock = row.getItem();
+                    System.out.println(rock.getName());
+
+                    showPhotosView(rock.getImagesList());
+                }
+            });
+            return row ;
+        });
+
+
+        column0.setMinWidth(25);
+        column0.setPrefWidth(25);
+        column0.setMaxWidth(25);
         column8.setMinWidth(150);
         column9.setMinWidth(150);
         column10.setMinWidth(150);
         column11.setMinWidth(150);
         column12.setMinWidth(150);
-
 
         try {
             tableView.getItems().addAll(dataBase.getAll());
@@ -173,7 +253,6 @@ public class Controller {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
     }
 
