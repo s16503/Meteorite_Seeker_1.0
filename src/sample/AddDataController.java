@@ -80,6 +80,9 @@ public class AddDataController {
     int idToUpdate;
     List<MyImageView> toDelete;
 
+    // potrzeebny do odświeżania tabeli
+    Controller controller;
+
     public AddDataController()
     {
         update = false;
@@ -99,12 +102,10 @@ public class AddDataController {
         String type1 = type1TextField.getText();
         String type2 = type2TextField.getText();
 
-
         List<MyImageView> images = new ArrayList<>();
 
         try
         {
-
             for (MyImageView slot : slots)
             {
                 if (slot.isSelected() && !slot.isOld())
@@ -113,34 +114,6 @@ public class AddDataController {
                     images.add(slot);
                 }
             }
-
-//            if (imageViewSlot1.isSelected())
-//            {
-//                imageViewSlot1.setImage(createImage(imageViewSlot1.getImagePath()));
-//                images.add(imageViewSlot1);
-//            }
-//            if (imageViewSlot2.isSelected())
-//            {
-//                imageViewSlot2.setImage(createImage(imageViewSlot2.getImagePath()));
-//                images.add(imageViewSlot2);
-//            }
-//            if (imageViewSlot3.isSelected())
-//            {
-//                imageViewSlot3.setImage(createImage(imageViewSlot3.getImagePath()));
-//                images.add(imageViewSlot3);
-//            }
-//            if (imageViewSlot4.isSelected())
-//            {
-//                imageViewSlot4.setImage(createImage(imageViewSlot4.getImagePath()));
-//                images.add(imageViewSlot4);
-//            }
-//            if (imageViewSlot5.isSelected())
-//            {
-//                imageViewSlot5.setImage(createImage(imageViewSlot5.getImagePath()));
-//                images.add(imageViewSlot5);
-//            }
-
-
         }catch (Exception ex)
         {
             ex.printStackTrace();
@@ -169,11 +142,10 @@ public class AddDataController {
             e.printStackTrace();
         }
 
-
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
 
-
+        controller.refreshTable();
     }
 
     @FXML
@@ -256,7 +228,7 @@ public class AddDataController {
         if (rock.isFerromagnetic())
             ferromagneticCheckbox.setSelected(true);
 
-        //todo usuwanie zdjęć (zastąpione zdjęcei jest usuwane)
+
         MyImageView images[] = {imageViewSlot1,imageViewSlot2,imageViewSlot3,imageViewSlot4,imageViewSlot5};
         for (int i = 0; i < rock.getImagesList().size(); i++) {
             images[i].setImage(rock.getImagesList().get(i).getImage());
@@ -267,6 +239,7 @@ public class AddDataController {
             images[i].setDBId(rock.getImagesList().get(i).getDBId());
         }
 
+        controller.refreshTable();
     }
 
     Image createScaledImage(String path)
@@ -307,6 +280,11 @@ public class AddDataController {
     }
 
 
+
+    public void setBaseController(Controller c)
+    {
+        this.controller = c;
+    }
 
     @FXML
     private void initialize()

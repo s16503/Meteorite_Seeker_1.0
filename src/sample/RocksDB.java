@@ -2,8 +2,6 @@ package sample;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -11,23 +9,22 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RocksDB {
-    public final String DRIVER = "org.apache.derby.jdbc.EmbeddedDriver";
+    public final String DRIVER = "org.apache.derby.jdbc.EmbeddedDriver"; //"com.mysql.cj.jdbc.Driver";
     public String jdbc_url;
     Connection connection;
 
     public RocksDB()
     {
-        jdbc_url = "jdbc:derby:DataBase;create=true";
+        jdbc_url = "jdbc:derby:DataBase;create=true"; //"jdbc:mysql://188.68.232.122:3306/Janek?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+
         try {
             Class.forName(DRIVER);
-            connection = DriverManager.getConnection(jdbc_url);
+            connection = DriverManager.getConnection(jdbc_url);   //"Janek","jupiter"
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {
@@ -39,14 +36,16 @@ public class RocksDB {
     {
         try
         {
-           // connection.createStatement().execute("DROP TABLE Photo");
-            //connection.createStatement().execute("DROP TABLE Rock");
+
+
+            connection.createStatement().execute("DROP TABLE Photo");
+            connection.createStatement().execute("DROP TABLE Rock");
 
             connection.createStatement().execute(
                             "CREATE TABLE Photo(\n" +
                             "    Id_Photo integer  NOT NULL,\n" +
                             "    Rock_Id_Rock integer  NOT NULL,\n" +
-                            "    Photo_File blob(10M)  NOT NULL,\n" +
+                            "    Photo_File mediumblob NOT NULL,\n" +           // blob(10M)
                             "    CONSTRAINT Photo_pk PRIMARY KEY (Id_Photo)\n" +
                             ") \n" );
 
@@ -75,26 +74,10 @@ public class RocksDB {
                             "-- End of file."
             );
 
-
-            //String DML = "INSERT INTO Picture VALUES (?, ?)";
-
-//            InputStream instream = Files.newInputStream(Paths.get("pictures\\7b5b5330-112b-11ea-a77f-7c019be7ecae.jpg"));
-//
-//            PreparedStatement pstmnt = connection.prepareStatement(DML);
-//            pstmnt.setInt(1, 1);
-//            pstmnt.setBinaryStream(2, instream);
-//            pstmnt.executeUpdate();
-
-
         }catch (SQLException e)
         {
             e.printStackTrace();
         }
-
-
-
-
-
     }
 
     public List<Rock> getAll() throws SQLException, IOException {
@@ -168,9 +151,78 @@ public class RocksDB {
     }
 
 
+    public List<Rock> getByDensity(double density) throws SQLException, IOException {
+        List<Rock> list = new ArrayList<>();
+
+        ResultSet resultSet;
+        resultSet = connection
+                .createStatement()
+                .executeQuery(
+                        "SELECT * FROM Rock WHERE Density_Min <= "+density+"AND Density_Max >= "+density
+                );
+
+        while (resultSet.next())
+        {
+            int idRock = resultSet.getInt("Id_Rock");
+
+            ResultSet photosResultSet;
+            photosResultSet = connection
+                    .createStatement()
+                    .executeQuery(
+                            "SELECT Photo_File, Id_Photo FROM Photo WHERE Rock_Id_Rock =" + idRock
+                    );
+            List<MyImageView> images = new ArrayList<>();
+            while(photosResultSet.next())
+            {
+                Blob b=photosResultSet.getBlob(1);
+                byte barr[]=b.getBytes(1,(int)b.length());
+
+
+                ByteArrayInputStream bis = new ByteArrayInputStream(barr);
+                BufferedImage bufferedImage = ImageIO.read(bis);
+                Image img = SwingFXUtils.toFXImage(bufferedImage, null);
+
+                MyImageView myImageView = new MyImageView();
+                myImageView.setOriginalSizeImage(img);
+
+                int w = 200;
+                int h = 150;
+
+                BufferedImage imOut = new BufferedImage(w,h,bufferedImage.getType());
+                Graphics2D g2d = imOut.createGraphics();
+                g2d.drawImage(bufferedImage, 0, 0, w, h, null);
+                g2d.dispose();
+                Image image = SwingFXUtils.toFXImage(imOut, null);
+                myImageView.setImage(image);
+
+                myImageView.setDBId(photosResultSet.getInt("Id_Photo"));
+
+                images.add(myImageView);
+            }
+
+            boolean ferromagnetyk = resultSet.getInt("Ferromagnetic") == 1 ? true : false;
+            Rock rock = new Rock(
+
+                    resultSet.getString("name"),
+                    resultSet.getDouble("Density_Min"),
+                    resultSet.getDouble("Density_Max"),
+                    ferromagnetyk,
+                    resultSet.getString("Description"),
+                    resultSet.getString("Type1"),
+                    resultSet.getString("Type2"),
+                    images
+            );
+
+            rock.setId(resultSet.getInt("Id_Rock"));
+            list.add(rock);
+        }
+
+        return list;
+    }
+
     public void addData(Rock rock) throws SQLException, IOException {
 
-        System.out.println("> Dodawanie sklały ...");
+        System.out.println("> Dodawanie skały ...");
         ResultSet resultSet;
         resultSet = connection
                 .createStatement()
@@ -201,7 +253,7 @@ public class RocksDB {
 
         System.out.println("dodano.");
 
-        System.out.println("Dodawwanie zdjęć ...");
+        System.out.println("Dodawanie zdjęć ...");
         //photos
         resultSet = connection
                 .createStatement()
@@ -239,12 +291,6 @@ public class RocksDB {
         System.out.println("Aktualizowanie skały o id: " + rock.getId());
 
         int ferromagnetic = rock.isFerromagnetic() ? 1:0;
-//
-//        connection.createStatement().execute(
-//                "UPDATE Rock SET Name ='"+rock.getName()+"', Density_Min ="+rock.getDensity_Min()+","
-//                        +"Density_Max ="+rock.getDensity_Max()+",Ferromagnetic ="+ ferromagnetic
-//                        +", Description ="+ rock.getDescription() + ", Type1 = "+rock.getType1() + "Type2 = " +rock.getType2() + " WHERE Id_Rock ="+rock.getId()
-//        );
 
         PreparedStatement update = connection.prepareStatement
                 ("UPDATE Rock SET name = ?, Density_Min = ?, Density_Max = ?, Ferromagnetic = ?, Description = ?," +
@@ -319,9 +365,6 @@ public class RocksDB {
 
         System.out.println("Usunięto pomyślnie");
     }
-
-
-
 
 
 }
