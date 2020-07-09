@@ -118,7 +118,7 @@ public class RocksDB {
                 int w = 200;
                 int h = 150;
 
-                BufferedImage imOut = new BufferedImage(w,h,bufferedImage.getType());
+                BufferedImage imOut = new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g2d = imOut.createGraphics();
                 g2d.drawImage(bufferedImage, 0, 0, w, h, null);
                 g2d.dispose();
@@ -245,11 +245,37 @@ public class RocksDB {
         int ferromagnetic = rock.isFerromagnetic() ? 1 : 0;
 
 
-        connection.createStatement().execute(
-                "INSERT INTO Rock VALUES(" +
-                        ""+nextId+",'"+rock.getName()+"',"+rock.getDensity_Min()+","+rock.getDensity_Max()+","+ferromagnetic+",'"
-                        +rock.getDescription() + "','" + rock.getType1() + "','" + rock.getType2()+"')"
-        );
+//        connection.createStatement().execute(
+//                "INSERT INTO Rock VALUES(" +
+//                        ""+nextId+",'"+rock.getName()+"',"+rock.getDensity_Min()+","+rock.getDensity_Max()+","+ferromagnetic+",'"
+//                        +rock.getDescription() + "','" + rock.getType1() + "','" + rock.getType2()+"')"
+//        );
+
+        PreparedStatement insert = connection.prepareStatement
+                ("INSERT INTO Rock VALUES(?,?,?,?,?,?,?,?)");
+
+        insert.setInt(1,nextId);
+        insert.setString(2,rock.getName());
+        insert.setDouble(3,rock.getDensity_Min());
+        insert.setDouble(4,rock.getDensity_Max());
+        insert.setInt(5,ferromagnetic);
+
+        if (rock.getDescription() != null && !rock.getDescription().equals("null"))
+        insert.setString(6,rock.getDescription());
+        else
+            insert.setString(6,null);
+
+        if (rock.getType1() != null && !rock.getType1().equals("null"))
+        insert.setString(7,rock.getType1());
+        else
+            insert.setString(7,null);
+
+        if (rock.getType2() != null && !rock.getType2().equals("null"))
+        insert.setString(8,rock.getType2());
+        else
+            insert.setString(8,null);
+
+        insert.executeUpdate();
 
         System.out.println("dodano.");
 

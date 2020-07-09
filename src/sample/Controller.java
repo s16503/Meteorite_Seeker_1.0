@@ -13,12 +13,13 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -54,12 +55,196 @@ public class Controller {
     ChoiceBox<Integer> waterTempChoiceBox;
     @FXML
     TextField densityResultTextField;
+    @FXML
+    Button backUpButton;
+    @FXML
+    Button loadButton;
 
     // temp, density
     HashMap<Integer, Double> waterDensitiesMap;
 
     public Controller()
     {
+    }
+
+    @FXML
+    private void handleBackUpButton(ActionEvent event)
+    {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File selectedDirectory = directoryChooser.showDialog(new Stage());
+
+        System.out.println(selectedDirectory.getPath());
+        File backUpDir = new File(selectedDirectory.getPath() +"\\Rocks_backup");
+        File data = new File(backUpDir.getPath() + "\\data.txt");
+        File photosDir = new File(backUpDir.getPath() + "\\photos");
+
+        if (!backUpDir.exists())
+        {
+                backUpDir.mkdir();
+            try {
+                data.createNewFile();
+                photosDir.mkdir();
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+        else
+        {
+            System.out.println("[!]> Folder backUp-u już istnieje");
+            return;
+        }
+
+
+        try {
+            List<Rock> rocks = dataBase.getAll();
+
+
+            FileWriter fileWriter = new FileWriter(data);
+            PrintWriter writer = new PrintWriter(fileWriter);
+
+            for (Rock rock : rocks)
+            {
+                StringBuilder builder = new StringBuilder();
+
+
+                builder.append(rock.getName());
+                builder.append('\t');
+                builder.append(rock.getDensity_Min());
+                builder.append('\t');
+                builder.append(rock.getDensity_Max());
+                builder.append('\t');
+                builder.append(rock.isFerromagnetic());
+                builder.append('\t');
+
+                if(rock.getType1() != null && rock.getType1().length()>0)
+                builder.append(rock.getType1());
+                else
+                    builder.append("null");
+                builder.append('\t');
+
+                if(rock.getType2() != null && rock.getType2().length()>0)
+                builder.append(rock.getType2());
+                else
+                    builder.append("null");
+                builder.append('\t');
+
+                if(rock.getDescription() != null && rock.getDescription().length()>0)
+                builder.append(rock.getDescription());
+                else
+                    builder.append("null");
+
+                writer.println(builder.toString());
+
+                int photoNr = 1;
+               for (MyImageView imageView : rock.getImagesList())
+               {
+                   Image img = imageView.getOriginalSizeImage();
+                   BufferedImage bufferedImage = SwingFXUtils.fromFXImage(img, null);
+                   BufferedImage imageRGB = new BufferedImage(
+                           bufferedImage.getWidth(),
+                           bufferedImage.getHeight(),
+                           BufferedImage.TYPE_INT_ARGB);
+
+                   Graphics2D graphics = imageRGB.createGraphics();
+                   graphics.drawImage(bufferedImage, 0, 0, null);
+
+                   File photoTestFile = new File(photosDir.getPath()+ "\\" + rock.getName() + "_photo_" + photoNr++ + ".jpg");
+                   ImageIO.write(imageRGB,"jpg",photoTestFile);
+                   graphics.dispose();
+               }
+
+            }
+
+            writer.close();
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        //directoryChooser.setInitialDirectory(new File("data/..."));
+    }
+
+
+    @FXML
+    private void handleLoadButton(ActionEvent event)
+    {
+        DirectoryChooser directoryChooser = new DirectoryChooser();
+        File selectedDirectory = directoryChooser.showDialog(new Stage());
+        File data = new File(selectedDirectory.getPath() + "\\data.txt");
+        File photosDir = new File(selectedDirectory.getPath() + "\\photos");
+
+
+        try {
+            List<Rock> rocks = new ArrayList<>();
+
+            FileReader fileReader = new FileReader(data);
+            BufferedReader reader = new BufferedReader(fileReader);
+
+            String line = "";
+            while ((line = reader.readLine()) != null)
+            {
+                String[] columns = line.split("\t");
+
+                for (int i = 0; i < columns.length; i++) {
+                    System.out.print(columns[i] + ", ");
+                }
+                System.out.println();
+
+                String name = columns[0];
+                double dens1 = Double.parseDouble(columns[1]);
+                double dens2 = Double.parseDouble(columns[2]);
+                boolean ferro = Boolean.parseBoolean(columns[3]);
+
+                String type1 = null;
+                if(!columns[4].equals("null"))
+                    type1 = columns[4];
+
+                String type2 = null;
+                if(!columns[5].equals("null"))
+                    type2 = columns[5];
+
+                String desc = null;
+                if(!columns[6].equals("null"))
+                    desc = columns[6];
+
+                List<MyImageView> images = new ArrayList<>();
+
+                for (File photo : photosDir.listFiles())
+                {
+                   if(photo.getName().split("_")[0].equals(name))
+                   {
+                      BufferedImage img = ImageIO.read(photo);
+                      Image image = SwingFXUtils.toFXImage(img, null);
+                      MyImageView myView = new MyImageView(image);
+                      myView.setOriginalSizeImage(image);
+                      myView.setImagePath(photo.toPath());
+                      images.add(myView);
+                   }
+                }
+
+
+               Rock rock = new Rock(name,dens1,dens2,ferro,desc,type1,type2,images);
+                rocks.add(rock);
+            }
+            reader.close();
+
+            for (Rock rock : rocks)
+                dataBase.addData(rock);
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
 
@@ -77,6 +262,7 @@ public class Controller {
         double density = Double.parseDouble(densityResultTextField.getText());
 
         try {
+            refreshResultTable();
             resultTableView.getItems().addAll(dataBase.getByDensity(density));
         } catch (SQLException e) {
             e.printStackTrace();
@@ -175,6 +361,7 @@ public class Controller {
         refreshTable();
     }
 
+    //odświeżane tabeli bazy
     public void refreshTable()
     {
         try {
@@ -186,6 +373,12 @@ public class Controller {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    //odświerzanie tabeli porónywania gęstości
+    public void refreshResultTable()
+    {
+            resultTableView.getItems().clear();
     }
 
     private void showPhotosView(List<MyImageView> myImageViews)
@@ -223,7 +416,32 @@ public class Controller {
     {
 
        dataBase = new RocksDB();
-       //dataBase.init();
+        //dataBase.init();
+
+
+
+       //buttons images
+        InputStream instream = null;
+        try {
+            instream = Files.newInputStream(Paths.get("images\\cloud-refresh.png"));
+            BufferedImage im = ImageIO.read(instream);
+
+            int w = 30;
+            int h = 30;
+            BufferedImage imOut = new BufferedImage(w, h, im.getType());
+            Graphics2D g2d = imOut.createGraphics();
+            g2d.drawImage(im, 0, 0, w, h, null);
+            g2d.dispose();
+
+            Image refreshImage = SwingFXUtils.toFXImage(imOut, null);
+            refreshButton.setGraphic(new ImageView(refreshImage));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+
 
        int temps[] = {17,18,19,20,21,22,23,24,25,26,27};
        double waterDensities[] = {0.998,0.998,0.998,0.998,0.998,0.997,0.997,0.997,0.997,0.996,0.996};
