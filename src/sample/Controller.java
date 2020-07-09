@@ -14,9 +14,9 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -288,7 +288,7 @@ public class Controller {
 
         try {
 
-            FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("sample\\AddDataWindow.fxml"));
+            FXMLLoader loader = new FXMLLoader(AddDataController.class.getResource("AddDataWindow.fxml"));
             Parent root = loader.load();
             AddDataController addDataController = loader.getController();
 
@@ -314,7 +314,7 @@ public class Controller {
     {
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("sample\\AddDataWindow.fxml"));
+            FXMLLoader loader = new FXMLLoader(AddDataController.class.getResource("AddDataWindow.fxml"));
             Parent root = loader.load();
             AddDataController addDataController = loader.getController();
             addDataController.setBaseController(this);
@@ -337,11 +337,20 @@ public class Controller {
     @FXML
     private void handleDeleteButton(ActionEvent event)
     {
+
+        System.out.println("Proces usuwania..");
+
         Rock rock;
         try
         {
-           rock = (Rock) tableView.getSelectionModel().getSelectedItem();
-           dataBase.deleteData(rock.getId());
+            rock = (Rock) tableView.getSelectionModel().getSelectedItem();
+            int a = JOptionPane.showConfirmDialog(null,"Czy na pewno usunąć " + rock.getName() +"?","Usuwanie", JOptionPane.YES_NO_OPTION);
+
+            if (a == 0)
+            dataBase.deleteData(rock.getId());
+            else
+                System.out.println("Zaniechano..");
+
         }
         catch (NullPointerException ex)
         {
@@ -385,7 +394,7 @@ public class Controller {
     {
 
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("sample\\photosWindow.fxml"));
+            FXMLLoader loader = new FXMLLoader(PhotosViewController.class.getResource("photosWindow.fxml"));
             Parent root = loader.load();
             PhotosViewController photosViewController = loader.getController();
 
@@ -414,17 +423,16 @@ public class Controller {
     @FXML
     private void initialize()
     {
-
        dataBase = new RocksDB();
-        //dataBase.init();
+       dataBase.init();
 
 
 
        //buttons images
         InputStream instream = null;
         try {
-            instream = Files.newInputStream(Paths.get("images\\cloud-refresh.png"));
-            BufferedImage im = ImageIO.read(instream);
+           // instream = Files.newInputStream(Paths.get("images\\cloud-refresh.png"));
+            BufferedImage im = ImageIO.read(getClass().getResourceAsStream("/cloud-refresh.png"));
 
             int w = 30;
             int h = 30;
@@ -440,9 +448,7 @@ public class Controller {
         }
 
 
-
-
-
+        //wypełnianie choice boxa danymi dot tempreatury wody
        int temps[] = {17,18,19,20,21,22,23,24,25,26,27};
        double waterDensities[] = {0.998,0.998,0.998,0.998,0.998,0.997,0.997,0.997,0.997,0.996,0.996};
 
@@ -454,13 +460,13 @@ public class Controller {
         waterTempChoiceBox.setItems(FXCollections.observableArrayList(waterDensitiesMap.keySet()));
         waterTempChoiceBox.setValue(20);
 
-       // dataBase.init();
 
 
+        // wyswietlanie w tebeli, definicja kolumn
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         resultTableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        // wyswietlanie w tebeli, definicja kolumn
+
         TableColumn<Integer, Rock> column0 = new TableColumn<>("Id");
         column0.setCellValueFactory(new PropertyValueFactory<>("id"));
 
@@ -589,24 +595,55 @@ public class Controller {
         });
 
 
+        // rozmiary kolumn dla tabeli bazy
         column0.setMinWidth(25);
         column0.setPrefWidth(25);
         column0.setMaxWidth(25);
-        column8.setMinWidth(150);
-        column9.setMinWidth(150);
-        column10.setMinWidth(150);
-        column11.setMinWidth(150);
-        column12.setMinWidth(150);
+        column1.setMinWidth(50);
+        column2.setMinWidth(30);
+        column2.setPrefWidth(40);
+        column2.setMaxWidth(50);
+        column3.setMinWidth(30);
+        column3.setPrefWidth(40);
+        column3.setMaxWidth(50);
+        column4.setMinWidth(30);
+        column4.setPrefWidth(30);
+        column5.setPrefWidth(50);
+        column5.setMinWidth(50);
+        column6.setPrefWidth(50);
+        column6.setMinWidth(50);
+        column7.setPrefWidth(75);
+        column7.setMinWidth(50);
+        column8.setMinWidth(200);
+        column9.setMinWidth(200);
+        column10.setMinWidth(200);
+        column11.setMinWidth(200);
+        column12.setMinWidth(200);
 
-
+        // rozmiary kolumn dla tabeli wynikowej przy badaniu gęstości
         resultColumn0.setMinWidth(25);
         resultColumn0.setPrefWidth(25);
         resultColumn0.setMaxWidth(25);
-        resultColumn8.setMinWidth(150);
-        resultColumn9.setMinWidth(150);
-        resultColumn10.setMinWidth(150);
-        resultColumn11.setMinWidth(150);
-        resultColumn12.setMinWidth(150);
+        resultColumn1.setMinWidth(50);
+        resultColumn2.setMinWidth(30);
+        resultColumn2.setPrefWidth(40);
+        resultColumn2.setMaxWidth(50);
+        resultColumn3.setMinWidth(30);
+        resultColumn3.setPrefWidth(40);
+        resultColumn3.setMaxWidth(50);
+        resultColumn4.setMinWidth(30);
+        resultColumn4.setPrefWidth(30);
+        resultColumn5.setPrefWidth(50);
+        resultColumn5.setMinWidth(50);
+        resultColumn6.setPrefWidth(50);
+        resultColumn6.setMinWidth(50);
+        resultColumn7.setPrefWidth(75);
+        resultColumn7.setMinWidth(50);
+        resultColumn8.setMinWidth(200);
+        resultColumn9.setMinWidth(200);
+        resultColumn10.setMinWidth(200);
+        resultColumn11.setMinWidth(200);
+        resultColumn12.setMinWidth(200);
 
         try {
             tableView.getItems().addAll(dataBase.getAll());
@@ -619,31 +656,33 @@ public class Controller {
 
     }
 
-    ImageView getImageView(String path)
-    {
-        InputStream instream = null;
-        try {
-            instream = Files.newInputStream(Paths.get(path));
-            BufferedImage im = ImageIO.read(instream);
-
-            int w = 200;
-            int h = 150;
-            BufferedImage imOut = new BufferedImage(w,h,im.getType());
-            Graphics2D g2d = imOut.createGraphics();
-            g2d.drawImage(im, 0, 0, w, h, null);
-            g2d.dispose();
-
-            Image image = SwingFXUtils.toFXImage(imOut, null);
-
-            ImageView imageView = new ImageView(image);
-            return imageView;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
 
-        return null;
-
-    }
+//    ImageView getImageView(String path)
+//    {
+//        InputStream instream = null;
+//        try {
+//            instream = Files.newInputStream(Paths.get(path));
+//            BufferedImage im = ImageIO.read(instream);
+//
+//            int w = 200;
+//            int h = 150;
+//            BufferedImage imOut = new BufferedImage(w,h,im.getType());
+//            Graphics2D g2d = imOut.createGraphics();
+//            g2d.drawImage(im, 0, 0, w, h, null);
+//            g2d.dispose();
+//
+//            Image image = SwingFXUtils.toFXImage(imOut, null);
+//
+//            ImageView imageView = new ImageView(image);
+//            return imageView;
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//
+//        return null;
+//
+//    }
 
 }

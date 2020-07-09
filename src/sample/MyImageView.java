@@ -18,7 +18,7 @@ public class MyImageView extends ImageView {
 
     private int id;
     boolean selected;
-    public static final Image DEFAULT_IMAGE = getFormatImage("images\\image-empty-icon.png");
+    public final Image DEFAULT_IMAGE = getFormatImage("/image-empty-icon.png");
     private Path imagePath;
     private Image originalSizeImage;
     private boolean old;
@@ -67,12 +67,12 @@ public class MyImageView extends ImageView {
         return id;
     }
 
-    static Image getFormatImage(String path) {
+    Image getFormatImage(String fileName) {
         InputStream instream = null;
         try {
-            instream = Files.newInputStream(Paths.get(path));
-            BufferedImage im = ImageIO.read(instream);
-
+            //instream = Files.newInputStream();
+            //Image image = new Image(getClass().getResourceAsStream("/image.png"));
+            BufferedImage im = ImageIO.read(getClass().getResourceAsStream(fileName));
             int w = 200;
             int h = 150;
             BufferedImage imOut = new BufferedImage(w, h, im.getType());

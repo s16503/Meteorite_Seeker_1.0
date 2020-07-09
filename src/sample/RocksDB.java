@@ -38,41 +38,70 @@ public class RocksDB {
         {
 
 
-            connection.createStatement().execute("DROP TABLE Photo");
-            connection.createStatement().execute("DROP TABLE Rock");
+            //connection.createStatement().execute("DROP TABLE Photo");
+           // connection.createStatement().execute("DROP TABLE Rock");
 
-            connection.createStatement().execute(
-                            "CREATE TABLE Photo(\n" +
-                            "    Id_Photo integer  NOT NULL,\n" +
-                            "    Rock_Id_Rock integer  NOT NULL,\n" +
-                            "    Photo_File mediumblob NOT NULL,\n" +           // blob(10M)
-                            "    CONSTRAINT Photo_pk PRIMARY KEY (Id_Photo)\n" +
-                            ") \n" );
+            DatabaseMetaData meta = null;
 
+                meta = connection.getMetaData();
+                ResultSet res = meta.getTables(null, null, "ROCK",
+                        null);
 
-            connection.createStatement().execute(
+                if (!res.next())
+                {
+                    connection.createStatement().execute(
                             "CREATE TABLE Rock(\n" +
-                            "    Id_Rock integer  NOT NULL,\n" +
-                            "    Name varchar(50)  NOT NULL,\n" +
-                            "    Density_Min double  NOT NULL,\n" +
-                            "    Density_Max double  NOT NULL,\n" +
-                            "    Ferromagnetic integer  ,\n" +
-                            "    Description varchar(300)  ,\n" +
-                            "    Type1 varchar(50)  ,\n" +
-                            "    Type2 varchar(50)  ,\n" +
-                            "    CONSTRAINT Rock_pk PRIMARY KEY (Id_Rock)\n" +
-                            ") \n" );
+                                    "    Id_Rock integer  NOT NULL,\n" +
+                                    "    Name varchar(50)  NOT NULL,\n" +
+                                    "    Density_Min double  NOT NULL,\n" +
+                                    "    Density_Max double  NOT NULL,\n" +
+                                    "    Ferromagnetic integer  ,\n" +
+                                    "    Description varchar(300)  ,\n" +
+                                    "    Type1 varchar(50)  ,\n" +
+                                    "    Type2 varchar(50)  ,\n" +
+                                    "    CONSTRAINT Rock_pk PRIMARY KEY (Id_Rock)\n" +
+                                    ") \n" );
+                }
 
 
-            connection.createStatement().execute(
+                res = meta.getTables(null, null, "PHOTO",
+                    null);
+
+                if (!res.next())
+                {
+
+                    connection.createStatement().execute(
+                            "CREATE TABLE Photo(\n" +
+                                    "    Id_Photo integer  NOT NULL,\n" +
+                                    "    Rock_Id_Rock integer  NOT NULL,\n" +
+                                    "    Photo_File blob(10M) NOT NULL,\n" +           // blob(10M) ,mysql >>> mediumblob
+                                    "    CONSTRAINT Photo_pk PRIMARY KEY (Id_Photo)\n" +
+                                    ") \n" );
+
+
+                                connection.createStatement().execute(
                             "-- foreign keys\n" +
                             "-- Reference: Photo_Rock (table: Photo)\n" +
                             "ALTER TABLE Photo ADD CONSTRAINT Photo_Rock\n" +
                             "    FOREIGN KEY (Rock_Id_Rock)\n" +
                             "    REFERENCES Rock (Id_Rock)\n" +
                             "\n" +
-                            "-- End of file."
-            );
+                            "-- End of file.");
+
+                }
+
+
+
+//            connection.createStatement().execute(
+//                            "-- foreign keys\n" +
+//                            "-- Reference: Photo_Rock (table: Photo)\n" +
+//                            "ALTER TABLE Photo ADD CONSTRAINT Photo_Rock\n" +
+//                            "    FOREIGN KEY (Rock_Id_Rock)\n" +
+//                            "    REFERENCES Rock (Id_Rock)\n" +
+//                            "\n" +
+//                            "-- End of file."
+//            );
+
 
         }catch (SQLException e)
         {
@@ -188,7 +217,7 @@ public class RocksDB {
                 int w = 200;
                 int h = 150;
 
-                BufferedImage imOut = new BufferedImage(w,h,bufferedImage.getType());
+                BufferedImage imOut = new BufferedImage(w,h,BufferedImage.TYPE_INT_ARGB);
                 Graphics2D g2d = imOut.createGraphics();
                 g2d.drawImage(bufferedImage, 0, 0, w, h, null);
                 g2d.dispose();
@@ -370,11 +399,11 @@ public class RocksDB {
         System.out.println("Usuwanie skały id: " + id);
 
         connection.createStatement().execute(
-                "DELETE FROM Rock WHERE Id_Rock ="+id
+                "DELETE FROM Photo WHERE Rock_Id_Rock ="+id
         );
 
         connection.createStatement().execute(
-                "DELETE FROM Photo WHERE Rock_Id_Rock ="+id
+                "DELETE FROM Rock WHERE Id_Rock ="+id
         );
 
         System.out.println("Usunięto pomyślnie");
